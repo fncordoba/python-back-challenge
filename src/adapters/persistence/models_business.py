@@ -1,10 +1,8 @@
 from sqlalchemy import Column, String, DateTime, ForeignKey, Date, Numeric, Enum as SAEnum
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
-from sqlalchemy.orm import declarative_base, relationship
-
+from sqlalchemy.orm import relationship
 from src.domain.enums import InvoiceStatus, Currency
-
-Base = declarative_base()
+from . import Base
 
 class SchoolModel(Base):
     __tablename__ = "schools"

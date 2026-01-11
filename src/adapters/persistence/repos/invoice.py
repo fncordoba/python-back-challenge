@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 from src.application.ports.repositories import InvoiceRepository
 from src.domain.entities import Invoice, Payment
 from src.domain.value_objects import Money
-from src.adapters.persistence.models import InvoiceModel, PaymentModel
+from src.adapters.persistence.models_business import InvoiceModel, PaymentModel
 
 class SQLAlchemyInvoiceRepository(InvoiceRepository):
     def __init__(self, session: AsyncSession):

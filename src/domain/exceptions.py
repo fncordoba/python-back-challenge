@@ -10,6 +10,14 @@ class EntityNotFound(DomainError):
     """Raised when an entity is not found."""
     pass
 
+class AuthenticationError(DomainError):
+    """Raised when authentication fails."""
+    pass
+
+class PermissionDenied(DomainError):
+    """Raised when a user does not have the necessary permissions."""
+    pass
+
 class PaymentExceedsDueAmount(BusinessRuleViolation):
     """Raised when payment amount exceeds the invoice remaining balance."""
     pass

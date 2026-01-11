@@ -3,8 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from typing import List, Optional
 
-from src.application.commands import CommandHandlers
-from src.application.queries import QueryHandlers
+
 from src.application.dtos import (
     CreateSchoolCommand, CreateStudentCommand, 
     CreateInvoiceCommand, ProcessPaymentCommand,
@@ -17,6 +16,7 @@ from src.adapters.persistence.repos import (
     SQLAlchemyInvoiceRepository,
     SQLAlchemyStatementRepository
 )
+from src.adapters.web.auth_handlers import get_current_active_admin, get_current_user
 from src.adapters.cache.redis_adapter import RedisCacheAdapter
 from src.domain.exceptions import EntityNotFound, BusinessRuleViolation
 from src.application.dtos import (
@@ -26,19 +26,7 @@ from src.application.use_cases.commands import CommandHandlers
 from src.application.use_cases.queries import QueryHandlers
 
 import os
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-
-DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/school_payments")
-REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
-
-engine = create_async_engine(DATABASE_URL)
-AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
-
-cache_service = RedisCacheAdapter(REDIS_URL)
-
-async def get_db():
-    async with AsyncSessionLocal() as session:
-        yield session
+from src.adapters.persistence.db import get_db, REDIS_URL, cache_service
 
 async def get_command_handlers(session: AsyncSession = Depends(get_db)):
     uow = SQLAlchemyUnitOfWork(session)
@@ -72,9 +60,10 @@ router = APIRouter()
 
 # --- Schools ---
 
-@router.post("/schools", response_model=SchoolDTO, status_code=201)
+@router.post("/schools", status_code=201, response_model=SchoolDTO)
 async def create_school(
-    cmd: CreateSchoolCommand, 
+    cmd: CreateSchoolCommand,
+    current_user = Depends(get_current_active_admin),
     handlers: CommandHandlers = Depends(get_command_handlers)
 ):
     return await handlers.create_school(cmd)
@@ -90,6 +79,7 @@ async def list_schools(
 @router.delete("/schools/{school_id}", status_code=204)
 async def delete_school(
     school_id: UUID,
+    current_user = Depends(get_current_active_admin),
     handlers: CommandHandlers = Depends(get_command_handlers)
 ):
     try:
@@ -101,6 +91,7 @@ async def delete_school(
 async def update_school(
     school_id: UUID,
     cmd: UpdateSchoolCommand,
+    current_user = Depends(get_current_active_admin),
     handlers: CommandHandlers = Depends(get_command_handlers)
 ):
     if school_id != cmd.school_id:
@@ -112,9 +103,10 @@ async def update_school(
 
 # --- Students ---
 
-@router.post("/students", response_model=StudentDTO, status_code=201)
+@router.post("/students", status_code=201, response_model=StudentDTO)
 async def create_student(
-    cmd: CreateStudentCommand, 
+    cmd: CreateStudentCommand,
+    current_user = Depends(get_current_active_admin),
     handlers: CommandHandlers = Depends(get_command_handlers)
 ):
     try:
@@ -134,6 +126,7 @@ async def list_students(
 @router.delete("/students/{student_id}", status_code=204)
 async def delete_student(
     student_id: UUID,
+    current_user = Depends(get_current_active_admin),
     handlers: CommandHandlers = Depends(get_command_handlers)
 ):
     try:
@@ -145,6 +138,7 @@ async def delete_student(
 async def update_student(
     student_id: UUID,
     cmd: UpdateStudentCommand,
+    current_user = Depends(get_current_active_admin),
     handlers: CommandHandlers = Depends(get_command_handlers)
 ):
     if student_id != cmd.student_id:
@@ -156,9 +150,10 @@ async def update_student(
 
 # --- Invoices ---
 
-@router.post("/invoices", response_model=InvoiceDTO, status_code=201)
+@router.post("/invoices", status_code=201, response_model=InvoiceDTO)
 async def create_invoice(
-    cmd: CreateInvoiceCommand, 
+    cmd: CreateInvoiceCommand,
+    current_user = Depends(get_current_active_admin),
     handlers: CommandHandlers = Depends(get_command_handlers)
 ):
     try:
@@ -178,6 +173,7 @@ async def list_invoices(
 @router.delete("/invoices/{invoice_id}", status_code=204)
 async def delete_invoice(
     invoice_id: UUID,
+    current_user = Depends(get_current_active_admin),
     handlers: CommandHandlers = Depends(get_command_handlers)
 ):
     try:
@@ -187,7 +183,8 @@ async def delete_invoice(
 
 @router.post("/payments", status_code=201)
 async def process_payment(
-    cmd: ProcessPaymentCommand, 
+    cmd: ProcessPaymentCommand,
+    current_user = Depends(get_current_active_admin),
     handlers: CommandHandlers = Depends(get_command_handlers)
 ):
     try:

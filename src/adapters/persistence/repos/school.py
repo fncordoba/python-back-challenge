@@ -5,7 +5,7 @@ from sqlalchemy import select, func, delete as sqlalchemy_delete
 
 from src.application.ports.repositories import SchoolRepository
 from src.domain.entities import School
-from src.adapters.persistence.models import SchoolModel
+from src.adapters.persistence.models_business import SchoolModel
 
 class SQLAlchemySchoolRepository(SchoolRepository):
     def __init__(self, session: AsyncSession):

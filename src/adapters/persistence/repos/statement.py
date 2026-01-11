@@ -7,7 +7,7 @@ from sqlalchemy import select, func
 
 from src.application.ports.repositories import StatementRepository
 from src.application.dtos import AccountStatementDTO, InvoiceDTO
-from src.adapters.persistence.models import InvoiceModel, PaymentModel, StudentModel, SchoolModel
+from src.adapters.persistence.models_business import InvoiceModel, PaymentModel, StudentModel, SchoolModel
 
 class SQLAlchemyStatementRepository(StatementRepository):
     def __init__(self, session: AsyncSession):

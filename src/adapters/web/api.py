@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from src.adapters.web.handlers import router
+from src.adapters.web.handlers import router as api_router
+from src.adapters.web.auth_handlers import router as auth_router
 from src.adapters.observability import ObservabilityMiddleware
 from src.domain.exceptions import DomainError
 
@@ -39,6 +40,7 @@ def create_app() -> FastAPI:
         )
 
     # Routes
-    app.include_router(router)
+    app.include_router(auth_router)
+    app.include_router(api_router)
     
     return app

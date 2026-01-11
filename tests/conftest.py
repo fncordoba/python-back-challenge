@@ -1,40 +1,34 @@
 import pytest
 import pytest_asyncio
-from unittest.mock import AsyncMock, MagicMock
+import os
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from src.adapters.persistence.db import DATABASE_URL
+from src.main import app
+from src.adapters.web.handlers import get_db
+from src.adapters.persistence import Base
 
-@pytest.fixture
-def mock_uow():
-    uow = AsyncMock()
-    uow.commit = AsyncMock()
-    uow.rollback = AsyncMock()
-    return uow
+@pytest_asyncio.fixture(scope="session")
+async def engine():
+    engine = create_async_engine(DATABASE_URL)
+    yield engine
+    await engine.dispose()
 
-@pytest.fixture
-def mock_school_repo():
-    repo = AsyncMock()
-    # Setup common methods
-    repo.save = AsyncMock()
-    repo.get_by_id = AsyncMock(return_value=None)
-    return repo
+@pytest_asyncio.fixture(scope="function")
+async def session(engine):
+    # For tests, we might want to start transaction and rollback
+    # But for simplicity in this setup, we just yield a session
+    # Ideally, we should drop/create tables or use nested transaction
+    async_session = async_sessionmaker(engine, expire_on_commit=False)
+    async with async_session() as session:
+         yield session
 
-@pytest.fixture
-def mock_student_repo():
-    repo = AsyncMock()
-    repo.save = AsyncMock()
-    repo.get_by_id = AsyncMock(return_value=None)
-    return repo
-
-@pytest.fixture
-def mock_invoice_repo():
-    repo = AsyncMock()
-    repo.save = AsyncMock()
-    repo.get_by_id = AsyncMock(return_value=None)
-    return repo
-
-@pytest.fixture
-def mock_cache():
-    cache = AsyncMock()
-    cache.get = AsyncMock(return_value=None)
-    cache.set = AsyncMock()
-    cache.increment_version = AsyncMock()
-    return cache
+@pytest_asyncio.fixture(scope="function")
+async def async_client(session):
+    async def override_get_db():
+        yield session
+    
+    app.dependency_overrides[get_db] = override_get_db
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        yield client
+    app.dependency_overrides.clear()

@@ -7,6 +7,7 @@ A robust, hex-architecture backend for managing Schools, Students, Invoices, and
 - **Hexagonal Architecture**: Strict separation of concerns.
 - **CQRS**: Validated Commands and Optimized Queries.
 - **CRUD Operations**: Complete Create, Read, Update, Delete with Pagination.
+- **Authentication**: JWT & RBAC (Admin, School, Student roles).
 - **Account Statements**: Cached calculations with versioning strategy.
 - **Resilience**: Redis Circuit Breaker for graceful degradation.
 - **Observability**: Structured JSON logging with request tracing.
