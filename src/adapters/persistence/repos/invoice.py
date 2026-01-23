@@ -26,6 +26,7 @@ class SQLAlchemyInvoiceRepository(InvoiceRepository):
                          currency=p.amount.currency, paid_at=p.paid_at
                      )
                      self.session.add(pm)
+             await self.session.flush()
         else:
             model = InvoiceModel(
                 id=invoice.id,
@@ -44,6 +45,7 @@ class SQLAlchemyInvoiceRepository(InvoiceRepository):
                      currency=p.amount.currency, paid_at=p.paid_at
                  )
                  self.session.add(pm)
+            await self.session.flush()
 
     async def get_by_id(self, invoice_id: UUID) -> Optional[Invoice]:
         query = select(InvoiceModel).where(InvoiceModel.id == invoice_id).execution_options(populate_existing=True)
